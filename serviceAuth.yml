@@ -53,3 +53,39 @@ app:
       email: admin@univ.local
       password: "Admin#123"    # ⚠️ guillemets obligatoires
 
+#Configuration des endpoints d'administration (Actuator)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, circuitbreakers, retries, metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Configuration Resilience4J
+resilience4j:
+  circuitbreaker:
+    instances:
+      userServiceCB:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5000
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpen  
+  retry:
+    instances:
+      userServiceRetry:
+        maxAttempts: 3
+        waitDuration: 1000
+        retryExceptions:
+           - java.io.IOException
+           - java.net.ConnectException
+          
+  
+        
+
+
+      
+
