@@ -1,6 +1,10 @@
-
+server:
+  port: 8081
 
 spring:
+  application:
+    name: serviceAuth
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${DB_URL:jdbc:postgresql://localhost:5432/1-auth_db}
@@ -11,6 +15,7 @@ spring:
       maximum-pool-size: 10
       minimum-idle: 2
       connection-timeout: 30000
+
   jpa:
     open-in-view: false
     hibernate:
@@ -19,6 +24,7 @@ spring:
       hibernate:
         format_sql: true
         jdbc.lob.non_contextual_creation: true
+
   jackson:
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -34,34 +40,27 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,env
+        include: health,info,metrics,env,circuitbreakers,retries
+  endpoint:
+    health:
+      show-details: always
 
 app:
   jwt:
     issuer: serviceAuth
     secret: "T1Yt9cV5yZ0R3Q0p4uHn8Aq2Lw7mN3sX6pB4dF1kJ9rE2tV8cH5qZ7yW0uM6nR3"
-    access-token-expiration: 3600
-    refresh-token-expiration: 2592000
+    access-token-expiration: 3600        # 1h
+    refresh-token-expiration: 2592000    # 30j
 
   system:
     superuser:
       username: root
       email: root@univ.local
-      password: "Root#123"     # ⚠️ guillemets obligatoires à cause du #
+      password: "Root#123"
     admin:
       username: admin
       email: admin@univ.local
-      password: "Admin#123"    # ⚠️ guillemets obligatoires
-
-#Configuration des endpoints d'administration (Actuator)
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health, circuitbreakers, retries, metrics
-  endpoint:
-    health:
-      show-details: always
+      password: "Admin#123"
 
 # Configuration Resilience4J
 resilience4j:
@@ -71,21 +70,15 @@ resilience4j:
         registerHealthIndicator: true
         slidingWindowSize: 10
         failureRateThreshold: 50
-        waitDurationInOpenState: 5000
+        waitDurationInOpenState: 5s
         permittedNumberOfCallsInHalfOpenState: 3
-        automaticTransitionFromOpen  
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
   retry:
     instances:
       userServiceRetry:
         maxAttempts: 3
-        waitDuration: 1000
+        waitDuration: 1s
         retryExceptions:
-           - java.io.IOException
-           - java.net.ConnectException
-          
-  
-        
-
-
-      
-
+          - java.io.IOException
+          - java.net.ConnectException
